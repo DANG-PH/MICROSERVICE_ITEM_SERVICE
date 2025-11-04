@@ -1,23 +1,23 @@
-import { Controller, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { ItemService } from './item.service';
 import { Item } from './item.entity';
 import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse } from 'proto/item.pb';
-import { ITEM_PACKAGE_NAME, ITEM_SERVICE_NAME } from 'proto/item.pb';
+import { ITEM_SERVICE_NAME } from 'proto/item.pb';
 import { status } from '@grpc/grpc-js';
 @Controller()
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   // Lấy toàn bộ item của 1 user
-  @GrpcMethod(ITEM_PACKAGE_NAME, 'GetItemsByUser')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByUser')
   async getItemsByUser(data: UserIdRequest): Promise<ItemsResponse> {
     const items = await this.itemService.getItemsByUser(data.user_id);
     return { items };
   }
 
   // Thêm item cho user
-  @GrpcMethod(ITEM_PACKAGE_NAME, 'AddItem')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'AddItem')
   async addItem(data: AddItemRequest): Promise<ItemResponse> {
     if (!data.item) throw new RpcException({code: status.UNAUTHENTICATED ,message: 'Khong tim thay data item'});
     data.item.userId = data.user_id;
@@ -26,11 +26,11 @@ export class ItemController {
   }
 
   // Cập nhật item
-  @GrpcMethod(ITEM_PACKAGE_NAME, 'UpdateItem')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'UpdateItem')
   async updateItem(data: Item): Promise<ItemResponse> {
     const item = await this.itemService.getItem(data.id);
     if (!item) {
-      throw new HttpException('Item không tồn tại!', HttpStatus.NOT_FOUND);
+      throw new RpcException({code: status.NOT_FOUND ,message: 'Khong tim thay item'});
     }
 
     item.ten = data.ten;
@@ -45,19 +45,19 @@ export class ItemController {
   }
 
   // Xóa item
-  @GrpcMethod(ITEM_PACKAGE_NAME, 'DeleteItem')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'DeleteItem')
   async deleteItem(data: ItemIdRequest): Promise<MessageResponse> {
     await this.itemService.deleteItem(data.id);
     return { message: 'Xóa item thành công!' };
   }
 
   // Thêm nhiều item (replace toàn bộ list)
-  @GrpcMethod(ITEM_PACKAGE_NAME, 'AddMultipleItems')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'AddMultipleItems')
   async addMultipleItems(data: AddMultipleItemsRequest): Promise<ItemsResponse> {
     const { items, user_id } = data;
 
     if (!Array.isArray(items)) {
-        throw new HttpException('Danh sách items không hợp lệ', HttpStatus.BAD_REQUEST);
+        throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
     }
 
     await this.itemService.deleteByUser(user_id);
