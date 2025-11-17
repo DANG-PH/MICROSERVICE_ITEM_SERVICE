@@ -20,8 +20,25 @@ export class ItemController {
   @GrpcMethod(ITEM_SERVICE_NAME, 'AddItem')
   async addItem(data: AddItemRequest): Promise<ItemResponse> {
     if (!data.item) throw new RpcException({code: status.UNAUTHENTICATED ,message: 'Khong tim thay data item'});
-    data.item.userId = data.user_id;
-    const item = await this.itemService.saveItem(data.item);
+    const itemSave = this.itemService.create({
+            maItem: data.item.maItem || '',
+            ten: data.item.ten || '',
+            loai: data.item.loai || '',
+            moTa: data.item.moTa || '',
+            soLuong: data.item.soLuong || 0,
+            hanhTinh: data.item.hanhTinh || '',
+            setKichHoat: data.item.setKichHoat || 'null', 
+            soSaoPhaLe: data.item.soSaoPhaLe || 0,
+            soSaoPhaLeCuongHoa: data.item.soSaoPhaLeCuongHoa || 0,
+            soCap: data.item.soCap || 0,
+            hanSuDung: data.item.hanSuDung || 0,
+            sucManhYeuCau: data.item.sucManhYeuCau?.toString() || '0',
+            linkTexture: data.item.linkTexture || '',
+            viTri: data.item.viTri || '',
+            chiso: data.item.chiso || '[]',
+            userId: data.user_id,
+            });
+    const item = await this.itemService.saveItem(itemSave);
     return { item };
   }
 
@@ -63,14 +80,6 @@ export class ItemController {
     await this.itemService.deleteByUser(user_id);
 
     const itemsToSave = items.map(item => {
-        let chisoString = '[]';
-        if (item.chiso) {
-        try {
-            chisoString = typeof item.chiso === 'string' ? JSON.parse(item.chiso) : JSON.stringify(item.chiso);
-        } catch (e) {
-            chisoString = '[]'; 
-        }
-        }
 
         return this.itemService.create({
             maItem: item.maItem || '',
@@ -87,7 +96,7 @@ export class ItemController {
             sucManhYeuCau: item.sucManhYeuCau?.toString() || '0',
             linkTexture: item.linkTexture || '',
             viTri: item.viTri || '',
-            chiso: chisoString,
+            chiso: item.chiso || '[]',
             userId: user_id,
             });
     });

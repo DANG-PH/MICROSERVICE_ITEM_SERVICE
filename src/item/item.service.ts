@@ -18,10 +18,9 @@ export class ItemService {
 
     const resultItems = items.map(item => ({
         ...item,
-        chiso: item.chiso || '[]', 
+        chiso: item.chiso || '{}', 
     }));
 
-    console.log('Items trả về (JSON string):', resultItems);
     return resultItems;
   }
 

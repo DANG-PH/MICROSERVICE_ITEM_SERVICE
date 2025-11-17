@@ -39,7 +39,7 @@ export class Item {
   @Column('float')
   hanSuDung: number;
 
-  @Column('bigint')
+  @Column()
   sucManhYeuCau: string;
 
   @Column()
