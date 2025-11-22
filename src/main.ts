@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
@@ -15,7 +17,7 @@ async function bootstrap() {
     options: {
       package: ITEM_PACKAGE_NAME,
       protoPath: join(process.cwd(), 'proto/item.proto'), 
-      url: '0.0.0.0:50053', 
+      url: process.env.ITEM_URL, 
       loader: {
         keepCase: true,
         objects: true,
@@ -25,10 +27,10 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  logger.log('✅ gRPC server running on localhost:50053');
+  logger.log(`✅ gRPC server running on ${process.env.ITEM_URL}`);
 
-  await app.listen(process.env.PORT ?? 3003);
-  logger.log(`✅ HTTP server running on ${process.env.PORT ?? 3003}`);
+  await app.listen(Number(process.env.PORT));
+  logger.log(`✅ HTTP server running on ${process.env.PORT}`);
 }
 
 bootstrap();
