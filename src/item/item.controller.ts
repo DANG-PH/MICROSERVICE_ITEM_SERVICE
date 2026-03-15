@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { ItemService } from './item.service';
 import { Item } from './item.entity';
-import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse } from 'proto/item.pb';
+import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemIdsRequest, GetItemsByItemIdsResponse } from 'proto/item.pb';
 import { ITEM_SERVICE_NAME } from 'proto/item.pb';
 import { status } from '@grpc/grpc-js';
 @Controller()
@@ -13,6 +13,13 @@ export class ItemController {
   @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByUser')
   async getItemsByUser(data: UserIdRequest): Promise<ItemsResponse> {
     const items = await this.itemService.getItemsByUser(data.user_id);
+    return { items };
+  }
+
+  // Lấy toàn bộ item theo itemIds
+  @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByItemIds')
+  async getItemsByItemIds(data: GetItemsByItemIdsRequest): Promise<GetItemsByItemIdsResponse> {
+    const items = await this.itemService.getItemsByItemIds(data.itemIds);
     return { items };
   }
 

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item } from './item.entity';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ItemService {
@@ -23,6 +24,23 @@ export class ItemService {
 
     return resultItems;
   }
+
+async getItemsByItemIds(itemIds: number[]): Promise<any[]> {
+    if (!itemIds || itemIds.length === 0) {
+        return [];
+    }
+
+    const items = await this.itemRepository.find({
+        where: { id: In(itemIds) },
+    });
+
+    const resultItems = items.map(item => ({
+        ...item,
+        chiso: item.chiso || '{}',
+    }));
+
+    return resultItems;
+}
 
 
   async getItem(id: number): Promise<Item | null> {
