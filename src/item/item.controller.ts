@@ -17,7 +17,7 @@ export class ItemController {
   }
 
   // Lấy toàn bộ item theo itemIds
-  @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByItemIds')
+  @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByItemUuids')
   async getItemsByItemIds(data: GetItemsByItemUuidsRequest): Promise<GetItemsByItemUuidsResponse> {
     const items = await this.itemService.getItemsByItemUuids(data.itemUuids);
     return { items };
