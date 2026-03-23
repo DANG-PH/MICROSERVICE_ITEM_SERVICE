@@ -53,4 +53,7 @@ export class Item {
 
   @Column()
   userId: number;
+
+  @Column()
+  uuid: string;
 }

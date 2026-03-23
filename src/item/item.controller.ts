@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { ItemService } from './item.service';
 import { Item } from './item.entity';
-import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemIdsRequest, GetItemsByItemIdsResponse } from 'proto/item.pb';
+import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemUuidsRequest, GetItemsByItemUuidsResponse } from 'proto/item.pb';
 import { ITEM_SERVICE_NAME } from 'proto/item.pb';
 import { status } from '@grpc/grpc-js';
 @Controller()
@@ -18,8 +18,8 @@ export class ItemController {
 
   // Lấy toàn bộ item theo itemIds
   @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByItemIds')
-  async getItemsByItemIds(data: GetItemsByItemIdsRequest): Promise<GetItemsByItemIdsResponse> {
-    const items = await this.itemService.getItemsByItemIds(data.itemIds);
+  async getItemsByItemIds(data: GetItemsByItemUuidsRequest): Promise<GetItemsByItemUuidsResponse> {
+    const items = await this.itemService.getItemsByItemUuids(data.itemUuids);
     return { items };
   }
 
@@ -44,6 +44,7 @@ export class ItemController {
             viTri: data.item.viTri || '',
             chiso: data.item.chiso || '[]',
             userId: data.user_id,
+            uuid: data.item.uuid
             });
     const item = await this.itemService.saveItem(itemSave);
     return { item };
@@ -84,8 +85,6 @@ export class ItemController {
         throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
     }
 
-    await this.itemService.deleteByUser(user_id);
-
     const itemsToSave = items.map(item => {
 
         return this.itemService.create({
@@ -105,6 +104,7 @@ export class ItemController {
             viTri: item.viTri || '',
             chiso: item.chiso || '[]',
             userId: user_id,
+            uuid: item.uuid
             });
     });
 

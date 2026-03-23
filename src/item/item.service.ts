@@ -25,22 +25,22 @@ export class ItemService {
     return resultItems;
   }
 
-async getItemsByItemIds(itemIds: number[]): Promise<any[]> {
-    if (!itemIds || itemIds.length === 0) {
-        return [];
-    }
+  async getItemsByItemUuids(itemUuids: string[]): Promise<any[]> {
+      if (!itemUuids || itemUuids.length === 0) {
+          return [];
+      }
 
-    const items = await this.itemRepository.find({
-        where: { id: In(itemIds) },
-    });
+      const items = await this.itemRepository.find({
+          where: { uuid: In(itemUuids) },
+      });
 
-    const resultItems = items.map(item => ({
-        ...item,
-        chiso: item.chiso || '{}',
-    }));
+      const resultItems = items.map(item => ({
+          ...item,
+          chiso: item.chiso || '{}',
+      }));
 
-    return resultItems;
-}
+      return resultItems;
+  }
 
 
   async getItem(id: number): Promise<Item | null> {
