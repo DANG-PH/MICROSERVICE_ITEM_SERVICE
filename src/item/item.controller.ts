@@ -85,6 +85,8 @@ export class ItemController {
         throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
     }
 
+    await this.itemService.deleteByUser(user_id);
+
     const itemsToSave = items.map(item => {
 
         return this.itemService.create({
