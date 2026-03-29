@@ -76,27 +76,22 @@ export class ItemController {
     return { message: 'Xóa item thành công!' };
   }
 
-  // Thêm nhiều item (replace toàn bộ list)
   @GrpcMethod(ITEM_SERVICE_NAME, 'AddMultipleItems')
   async addMultipleItems(data: AddMultipleItemsRequest): Promise<ItemsResponse> {
     const { items, user_id } = data;
-
-    console.log('=== DEBUG addMultipleItems ===');
-  console.log('user_id:', user_id);
-  console.log('total items:', items.length);
-  items.forEach((item, i) => {
-    console.log(`[${i}] uuid="${item.uuid}" maItem="${item.maItem}"`);
-  });
-
-  const incomingUuidss = items.map(i => i.uuid).filter(Boolean);
-  console.log('incomingUuids sau filter:', incomingUuidss);
-  console.log('items bị mất uuid:', items.length - incomingUuidss.length);
 
     if (!Array.isArray(items)) {
       throw new RpcException({ code: status.INVALID_ARGUMENT, message: 'danh sach item khong hop le' });
     }
 
-    const mappedItems = items.map(item => ({
+    const seen = new Set<string>();
+    const uniqueItems = items.filter(item => {
+      if (!item.uuid || seen.has(item.uuid)) return false;
+      seen.add(item.uuid);
+      return true;
+    });
+
+    const mappedItems = uniqueItems.map(item => ({  
       maItem: item.maItem || '',
       ten: item.ten || '',
       loai: item.loai || '',
@@ -116,11 +111,9 @@ export class ItemController {
       uuid: item.uuid,
     }));
 
-    // Xóa item không còn trong danh sách mới
     const incomingUuids = mappedItems.map(i => i.uuid).filter(Boolean);
     await this.itemService.deleteOrphans(user_id, incomingUuids);
 
-    // Upsert item mới + đã sửa
     const savedItems = await this.itemService.upsertMany(mappedItems);
     return { items: savedItems };
   }
