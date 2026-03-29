@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item } from './item.entity';
 import { In } from 'typeorm';
+import { Item as ItemProto } from 'proto/item.pb';
 
 @Injectable()
 export class ItemService {
@@ -66,5 +67,27 @@ export class ItemService {
    // Tạo entity từ object thuần
   create(data: Partial<Item>): Item {
     return this.itemRepository.create(data);
+  }
+
+  async deleteOrphans(userId: number, keepUuids: string[]): Promise<void> {
+    if (keepUuids.length === 0) {
+      // Nếu client gửi list rỗng thì xóa hết
+      await this.itemRepository.delete({ userId });
+      return;
+    }
+
+    await this.itemRepository
+      .createQueryBuilder()
+      .delete()
+      .where('userId = :userId', { userId })
+      .andWhere('uuid NOT IN (:...keepUuids)', { keepUuids })
+      .execute();
+  }
+
+  async upsertMany(items: Partial<Item>[]) {
+    await this.itemRepository.upsert(items, ['uuid']);
+
+    const uuids = items.map(i => i.uuid);
+    return this.itemRepository.findBy({ uuid: In(uuids) });
   }
 }

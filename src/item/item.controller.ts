@@ -82,35 +82,35 @@ export class ItemController {
     const { items, user_id } = data;
 
     if (!Array.isArray(items)) {
-        throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
+      throw new RpcException({ code: status.INVALID_ARGUMENT, message: 'danh sach item khong hop le' });
     }
 
-    await this.itemService.deleteByUser(user_id);
+    const mappedItems = items.map(item => ({
+      maItem: item.maItem || '',
+      ten: item.ten || '',
+      loai: item.loai || '',
+      moTa: item.moTa || '',
+      soLuong: item.soLuong || 0,
+      hanhTinh: item.hanhTinh || '',
+      setKichHoat: item.setKichHoat || 'null',
+      soSaoPhaLe: item.soSaoPhaLe || 0,
+      soSaoPhaLeCuongHoa: item.soSaoPhaLeCuongHoa || 0,
+      soCap: item.soCap || 0,
+      hanSuDung: item.hanSuDung || 0,
+      sucManhYeuCau: item.sucManhYeuCau?.toString() || '0',
+      linkTexture: item.linkTexture || '',
+      viTri: item.viTri || '',
+      chiso: item.chiso || '[]',
+      userId: user_id,
+      uuid: item.uuid,
+    }));
 
-    const itemsToSave = items.map(item => {
+    // Xóa item không còn trong danh sách mới
+    const incomingUuids = mappedItems.map(i => i.uuid).filter(Boolean);
+    await this.itemService.deleteOrphans(user_id, incomingUuids);
 
-        return this.itemService.create({
-            maItem: item.maItem || '',
-            ten: item.ten || '',
-            loai: item.loai || '',
-            moTa: item.moTa || '',
-            soLuong: item.soLuong || 0,
-            hanhTinh: item.hanhTinh || '',
-            setKichHoat: item.setKichHoat || 'null', 
-            soSaoPhaLe: item.soSaoPhaLe || 0,
-            soSaoPhaLeCuongHoa: item.soSaoPhaLeCuongHoa || 0,
-            soCap: item.soCap || 0,
-            hanSuDung: item.hanSuDung || 0,
-            sucManhYeuCau: item.sucManhYeuCau?.toString() || '0',
-            linkTexture: item.linkTexture || '',
-            viTri: item.viTri || '',
-            chiso: item.chiso || '[]',
-            userId: user_id,
-            uuid: item.uuid
-            });
-    });
-
-    const savedItems = await this.itemService.saveAll(itemsToSave);
+    // Upsert item mới + đã sửa
+    const savedItems = await this.itemService.upsertMany(mappedItems);
     return { items: savedItems };
   }
 }
