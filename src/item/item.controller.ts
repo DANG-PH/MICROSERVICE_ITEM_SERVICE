@@ -76,45 +76,41 @@ export class ItemController {
     return { message: 'Xóa item thành công!' };
   }
 
+  // Thêm nhiều item (replace toàn bộ list)
   @GrpcMethod(ITEM_SERVICE_NAME, 'AddMultipleItems')
   async addMultipleItems(data: AddMultipleItemsRequest): Promise<ItemsResponse> {
     const { items, user_id } = data;
 
     if (!Array.isArray(items)) {
-      throw new RpcException({ code: status.INVALID_ARGUMENT, message: 'danh sach item khong hop le' });
+        throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
     }
 
-    const seen = new Set<string>();
-    const uniqueItems = items.filter(item => {
-      if (!item.uuid || seen.has(item.uuid)) return false;
-      seen.add(item.uuid);
-      return true;
+    await this.itemService.deleteByUser(user_id);
+
+    const itemsToSave = items.map(item => {
+
+        return this.itemService.create({
+            maItem: item.maItem || '',
+            ten: item.ten || '',
+            loai: item.loai || '',
+            moTa: item.moTa || '',
+            soLuong: item.soLuong || 0,
+            hanhTinh: item.hanhTinh || '',
+            setKichHoat: item.setKichHoat || 'null', 
+            soSaoPhaLe: item.soSaoPhaLe || 0,
+            soSaoPhaLeCuongHoa: item.soSaoPhaLeCuongHoa || 0,
+            soCap: item.soCap || 0,
+            hanSuDung: item.hanSuDung || 0,
+            sucManhYeuCau: item.sucManhYeuCau?.toString() || '0',
+            linkTexture: item.linkTexture || '',
+            viTri: item.viTri || '',
+            chiso: item.chiso || '[]',
+            userId: user_id,
+            uuid: item.uuid
+            });
     });
 
-    const mappedItems = uniqueItems.map(item => ({  
-      maItem: item.maItem || '',
-      ten: item.ten || '',
-      loai: item.loai || '',
-      moTa: item.moTa || '',
-      soLuong: item.soLuong || 0,
-      hanhTinh: item.hanhTinh || '',
-      setKichHoat: item.setKichHoat || 'null',
-      soSaoPhaLe: item.soSaoPhaLe || 0,
-      soSaoPhaLeCuongHoa: item.soSaoPhaLeCuongHoa || 0,
-      soCap: item.soCap || 0,
-      hanSuDung: item.hanSuDung || 0,
-      sucManhYeuCau: item.sucManhYeuCau?.toString() || '0',
-      linkTexture: item.linkTexture || '',
-      viTri: item.viTri || '',
-      chiso: item.chiso || '[]',
-      userId: user_id,
-      uuid: item.uuid,
-    }));
-
-    const incomingUuids = mappedItems.map(i => i.uuid).filter(Boolean);
-    await this.itemService.deleteOrphans(user_id, incomingUuids);
-
-    const savedItems = await this.itemService.upsertMany(mappedItems);
+    const savedItems = await this.itemService.saveAll(itemsToSave);
     return { items: savedItems };
   }
 }
