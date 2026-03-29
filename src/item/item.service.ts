@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item } from './item.entity';
 import { In } from 'typeorm';
+import { SwapItemRequest } from 'proto/item.pb';
 
 @Injectable()
 export class ItemService {
@@ -66,5 +67,23 @@ export class ItemService {
    // Tạo entity từ object thuần
   create(data: Partial<Item>): Item {
     return this.itemRepository.create(data);
+  }
+
+  async swapItem(data: SwapItemRequest): Promise<void> {
+    const { itemUuids, swap_user_id } = data;
+    if (!itemUuids || itemUuids.length === 0) return;
+
+    const items = await this.itemRepository.find({
+      where: { uuid: In(itemUuids) },
+    });
+
+    if (items.length === 0) return;
+
+    const updatedItems = items.map(item => ({
+      ...item,
+      userId: swap_user_id,
+    }));
+
+    await this.itemRepository.save(updatedItems);
   }
 }

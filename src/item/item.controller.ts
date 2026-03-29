@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { ItemService } from './item.service';
 import { Item } from './item.entity';
-import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemUuidsRequest, GetItemsByItemUuidsResponse } from 'proto/item.pb';
+import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemUuidsRequest, GetItemsByItemUuidsResponse, SwapItemRequest } from 'proto/item.pb';
 import { ITEM_SERVICE_NAME } from 'proto/item.pb';
 import { status } from '@grpc/grpc-js';
 import { v4 as uuidv4 } from 'uuid';
@@ -113,5 +113,11 @@ export class ItemController {
 
     const savedItems = await this.itemService.saveAll(itemsToSave);
     return { items: savedItems };
+  }
+
+  @GrpcMethod(ITEM_SERVICE_NAME, 'SwapItem')
+  async swapItem(data: SwapItemRequest): Promise<MessageResponse> {
+    await this.itemService.swapItem(data);
+    return { message: 'Swap item thành công!' };
   }
 }
