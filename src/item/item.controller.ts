@@ -5,6 +5,7 @@ import { Item } from './item.entity';
 import type { UserIdRequest, ItemIdRequest, AddItemRequest, AddMultipleItemsRequest, ItemResponse, ItemsResponse, MessageResponse, GetItemsByItemUuidsRequest, GetItemsByItemUuidsResponse } from 'proto/item.pb';
 import { ITEM_SERVICE_NAME } from 'proto/item.pb';
 import { status } from '@grpc/grpc-js';
+import { v4 as uuidv4 } from 'uuid';
 @Controller()
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
@@ -106,7 +107,7 @@ export class ItemController {
             viTri: item.viTri || '',
             chiso: item.chiso || '[]',
             userId: user_id,
-            uuid: item.uuid
+            uuid: item.uuid || uuidv4()
             });
     });
 
