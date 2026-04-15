@@ -13,7 +13,7 @@ export class ItemController {
   // Lấy toàn bộ item của 1 user
   @GrpcMethod(ITEM_SERVICE_NAME, 'GetItemsByUser')
   async getItemsByUser(data: UserIdRequest): Promise<ItemsResponse> {
-    const items = await this.itemService.getItemsByUser(data.user_id);
+    const items = await this.itemService.getItemsByUser(data.userId);
     return { items };
   }
 
@@ -44,7 +44,7 @@ export class ItemController {
             linkTexture: data.item.linkTexture || '',
             viTri: data.item.viTri || '',
             chiso: data.item.chiso || '[]',
-            userId: data.user_id,
+            userId: data.userId,
             uuid: data.item.uuid
             });
     const item = await this.itemService.saveItem(itemSave);
@@ -80,13 +80,13 @@ export class ItemController {
   // Thêm nhiều item (replace toàn bộ list)
   @GrpcMethod(ITEM_SERVICE_NAME, 'AddMultipleItems')
   async addMultipleItems(data: AddMultipleItemsRequest): Promise<ItemsResponse> {
-    const { items, user_id } = data;
+    const { items, userId } = data;
 
     if (!Array.isArray(items)) {
         throw new RpcException({code: status.INVALID_ARGUMENT,message: 'danh sach item khong hop le'});
     }
 
-    await this.itemService.deleteByUser(user_id);
+    await this.itemService.deleteByUser(userId);
 
     const itemsToSave = items.map(item => {
 
@@ -106,7 +106,7 @@ export class ItemController {
             linkTexture: item.linkTexture || '',
             viTri: item.viTri || '',
             chiso: item.chiso || '[]',
-            userId: user_id,
+            userId: userId,
             uuid: item.uuid || uuidv4()
             });
     });

@@ -70,7 +70,7 @@ export class ItemService {
   }
 
   async swapItem(data: SwapItemRequest): Promise<void> {
-    const { itemUuids, swap_user_id } = data;
+    const { itemUuids, swap_userId } = data;
     if (!itemUuids || itemUuids.length === 0) return;
 
     const items = await this.itemRepository.find({
@@ -81,7 +81,7 @@ export class ItemService {
 
     const updatedItems = items.map(item => ({
       ...item,
-      userId: swap_user_id,
+      userId: swap_userId,
     }));
 
     await this.itemRepository.save(updatedItems);
